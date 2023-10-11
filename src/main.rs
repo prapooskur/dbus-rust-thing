@@ -1,6 +1,6 @@
 
-mod proxy_profile;
-use proxy_profile::AsusDaemonProxyBlocking;
+mod dbus_proxy;
+use dbus_proxy::profile::AsusDaemonProxyBlocking;
 
 use std::error::Error;
 
@@ -57,6 +57,7 @@ fn getprofile_blocking() -> PowerProfile {
         "Quiet" => PowerProfile::Quiet,
         "Balanced" => PowerProfile::Balanced,
         "Performance" => PowerProfile::Performance,
+        // fall back to balanced
         _ => PowerProfile::Balanced,
     }
 }
@@ -130,26 +131,6 @@ impl SimpleComponent for PowerModel {
                 }
 
             },
-            /*
-            gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
-                set_spacing: 5,
-                set_margin_all: 5,
-
-                gtk::Button {
-                    set_label: "Next Profile",
-                    connect_clicked[sender] => move |_| {
-                        sender.input(PowerMsg::NextProfile);
-                    }
-                },
-
-                gtk::Label {
-                    #[watch]
-                    set_label: &format!("Current profile: {:?}", model.profile),
-                    set_margin_all: 5,
-                }
-            }
-             */
         }
     }
 
