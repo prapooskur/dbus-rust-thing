@@ -34,6 +34,20 @@ fn nextprofile_blocking() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn setprofile_blocking(profile: String) -> Result<(), Box<dyn Error>> {
+    let connection = zbus::blocking::Connection::system().unwrap();
+
+    let proxy = AsusDaemonProxyBlocking::new(&connection).unwrap();
+    let reply = proxy.set_active_profile(&profile);
+
+    match reply {
+        Ok(()) => println!("Succeeded! {:?}", reply.unwrap()),
+        Err(err) => eprintln!("Error calling next_profile: {:?}", err),
+    }
+
+    Ok(())
+}
+
 fn getprofile_blocking() -> PowerProfile {
     let connection = zbus::blocking::Connection::system().unwrap();
 
@@ -65,6 +79,9 @@ struct PowerModel {
 #[derive(Debug)]
 enum PowerMsg {
     NextProfile,
+    SetQuiet,
+    SetBalanced,
+    SetPerformance
 }
 
 #[relm4::component]
@@ -78,8 +95,42 @@ impl SimpleComponent for PowerModel {
         gtk::Window {
             set_title: Some("Albatross"),
             set_default_width: 300,
-            set_default_height: 100,
+            set_default_height: 75,
 
+            gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                set_spacing: 5,
+                set_margin_all: 5,
+
+                gtk::Button {
+                    set_label: "Quiet",
+                    connect_clicked[sender] => move |_| {
+                        sender.input(PowerMsg::SetQuiet);
+                    }
+                },
+
+                gtk::Button {
+                    set_label: "Balanced",
+                    connect_clicked[sender] => move |_| {
+                        sender.input(PowerMsg::SetBalanced);
+                    }
+                },
+
+                gtk::Button {
+                    set_label: "Performance",
+                    connect_clicked[sender] => move |_| {
+                        sender.input(PowerMsg::SetPerformance);
+                    }
+                },
+
+                gtk::Label {
+                    #[watch]
+                    set_label: &format!("Current profile: {:?}", model.profile),
+                    set_margin_all: 5,
+                }
+
+            },
+            /*
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 5,
@@ -98,6 +149,7 @@ impl SimpleComponent for PowerModel {
                     set_margin_all: 5,
                 }
             }
+             */
         }
     }
 
@@ -119,9 +171,18 @@ impl SimpleComponent for PowerModel {
         match msg {
             PowerMsg::NextProfile => {
                 nextprofile_blocking().unwrap();
-                self.profile = getprofile_blocking();
+            }
+            PowerMsg::SetQuiet => {
+                setprofile_blocking("Quiet".to_string()).unwrap();
+            }
+            PowerMsg::SetBalanced => {
+                setprofile_blocking("Balanced".to_string()).unwrap();
+            }
+            PowerMsg::SetPerformance => {
+                setprofile_blocking("Performance".to_string()).unwrap();
             }
         }
+        self.profile = getprofile_blocking();
     }
 }
 
