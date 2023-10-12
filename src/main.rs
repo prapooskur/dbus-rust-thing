@@ -66,6 +66,7 @@ fn getprofile_blocking() -> PowerProfile {
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
 use relm4::gtk::traits::WidgetExt;
+use relm4::gtk::prelude::{ComboBoxExtManual, ToggleButtonExt};
 
 #[derive(Debug)]
 enum PowerProfile {
@@ -99,7 +100,6 @@ impl SimpleComponent for PowerModel {
             set_default_width: 300,
             set_default_height: 75,
 
-
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 5,
@@ -111,25 +111,30 @@ impl SimpleComponent for PowerModel {
                     set_margin_all: 5,
                     set_halign: gtk::Align::Center,
 
-                    gtk::Button {
+                    append: power_button = &gtk::ToggleButton {
                         set_label: "Quiet",
+                        set_group: Some(&power_button),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetQuiet);
-                        }
+                        },
                     },
 
-                    gtk::Button {
+
+
+                    gtk::ToggleButton {
                         set_label: "Balanced",
+                        set_group: Some(&power_button),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetBalanced);
-                        }
+                        },
                     },
 
-                    gtk::Button {
+                    gtk::ToggleButton {
                         set_label: "Performance",
+                        set_group: Some(&power_button),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetPerformance);
-                        }
+                        },
                     },
 
 
