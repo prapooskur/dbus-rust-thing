@@ -65,6 +65,7 @@ fn getprofile_blocking() -> PowerProfile {
 
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
+use relm4::gtk::traits::WidgetExt;
 
 #[derive(Debug)]
 enum PowerProfile {
@@ -98,39 +99,58 @@ impl SimpleComponent for PowerModel {
             set_default_width: 300,
             set_default_height: 75,
 
+
             gtk::Box {
-                set_orientation: gtk::Orientation::Horizontal,
+                set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 5,
                 set_margin_all: 5,
 
-                gtk::Button {
-                    set_label: "Quiet",
-                    connect_clicked[sender] => move |_| {
-                        sender.input(PowerMsg::SetQuiet);
-                    }
-                },
-
-                gtk::Button {
-                    set_label: "Balanced",
-                    connect_clicked[sender] => move |_| {
-                        sender.input(PowerMsg::SetBalanced);
-                    }
-                },
-
-                gtk::Button {
-                    set_label: "Performance",
-                    connect_clicked[sender] => move |_| {
-                        sender.input(PowerMsg::SetPerformance);
-                    }
-                },
-
-                gtk::Label {
-                    #[watch]
-                    set_label: &format!("Current profile: {:?}", model.profile),
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 5,
                     set_margin_all: 5,
-                }
+                    set_halign: gtk::Align::Center,
 
-            },
+                    gtk::Button {
+                        set_label: "Quiet",
+                        connect_clicked[sender] => move |_| {
+                            sender.input(PowerMsg::SetQuiet);
+                        }
+                    },
+
+                    gtk::Button {
+                        set_label: "Balanced",
+                        connect_clicked[sender] => move |_| {
+                            sender.input(PowerMsg::SetBalanced);
+                        }
+                    },
+
+                    gtk::Button {
+                        set_label: "Performance",
+                        connect_clicked[sender] => move |_| {
+                            sender.input(PowerMsg::SetPerformance);
+                        }
+                    },
+
+
+
+                },
+
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 5,
+                    set_margin_all: 5,
+                    set_halign: gtk::Align::Center,
+
+                    gtk::Label {
+                        #[watch]
+                        set_label: &format!("Current profile: {:?}", model.profile),
+                        set_margin_all: 5,
+                    }
+                },
+
+            }
+
         }
     }
 
@@ -170,5 +190,6 @@ impl SimpleComponent for PowerModel {
 fn main() {
     let app = RelmApp::new("relm4.test.simple");
     let init_profile = getprofile_blocking();
+    println!("{:?}",init_profile);
     app.run::<PowerModel>(init_profile);
 }
