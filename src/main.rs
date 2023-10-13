@@ -1,4 +1,3 @@
-
 mod dbus_proxy;
 use dbus_proxy::profile::AsusDaemonProxyBlocking;
 
@@ -81,7 +80,6 @@ struct PowerModel {
 
 #[derive(Debug)]
 enum PowerMsg {
-    NextProfile,
     SetQuiet,
     SetBalanced,
     SetPerformance
@@ -109,11 +107,25 @@ impl SimpleComponent for PowerModel {
                     set_orientation: gtk::Orientation::Horizontal,
                     set_spacing: 5,
                     set_margin_all: 5,
+                    set_halign: gtk::Align::Start,
+
+                    gtk::Label {
+                        #[watch]
+                        set_label: &format!("Platform Profile:"),
+                        set_margin_all: 5,
+                    }
+                },
+
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_spacing: 5,
+                    set_margin_all: 5,
                     set_halign: gtk::Align::Center,
 
                     append: power_button = &gtk::ToggleButton {
                         set_label: "Quiet",
-                        set_group: Some(&power_button),
+                        //set_group: Some(&power_button),
+                        set_active: matches!(model.profile, PowerProfile::Quiet),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetQuiet);
                         },
@@ -124,6 +136,7 @@ impl SimpleComponent for PowerModel {
                     gtk::ToggleButton {
                         set_label: "Balanced",
                         set_group: Some(&power_button),
+                        set_active: matches!(model.profile, PowerProfile::Balanced),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetBalanced);
                         },
@@ -132,6 +145,7 @@ impl SimpleComponent for PowerModel {
                     gtk::ToggleButton {
                         set_label: "Performance",
                         set_group: Some(&power_button),
+                        set_active: matches!(model.profile, PowerProfile::Performance),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetPerformance);
                         },
@@ -141,18 +155,7 @@ impl SimpleComponent for PowerModel {
 
                 },
 
-                gtk::Box {
-                    set_orientation: gtk::Orientation::Horizontal,
-                    set_spacing: 5,
-                    set_margin_all: 5,
-                    set_halign: gtk::Align::Center,
-
-                    gtk::Label {
-                        #[watch]
-                        set_label: &format!("Current profile: {:?}", model.profile),
-                        set_margin_all: 5,
-                    }
-                },
+        
 
             }
 
@@ -175,9 +178,6 @@ impl SimpleComponent for PowerModel {
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
-            PowerMsg::NextProfile => {
-                nextprofile_blocking().unwrap();
-            }
             PowerMsg::SetQuiet => {
                 setprofile_blocking("Quiet".to_string()).unwrap();
             }
