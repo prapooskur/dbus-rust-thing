@@ -1,21 +1,6 @@
 mod dbus_proxy;
-use dbus_proxy::profile::ProfileProxyBlocking;
 
 use std::error::Error;
-
-fn setprofile_blocking(profile: String) -> Result<(), Box<dyn Error>> {
-    let connection = zbus::blocking::Connection::system().unwrap();
-
-    let proxy = ProfileProxyBlocking::new(&connection).unwrap();
-    let reply = proxy.set_active_profile(&profile);
-
-    match reply {
-        Ok(()) => println!("Succeeded! {:?}", reply.unwrap()),
-        Err(err) => eprintln!("Error calling next_profile: {:?}", err),
-    }
-
-    Ok(())
-}
 
 async fn setprofile(profile: String) -> Result<(), Box<dyn Error>> {
     let connection = zbus::Connection::system().await.unwrap();
@@ -29,20 +14,6 @@ async fn setprofile(profile: String) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-fn getprofile_blocking() -> PowerProfile {
-    let connection = zbus::blocking::Connection::system().unwrap();
-
-    let proxy = ProfileProxyBlocking::new(&connection).unwrap();
-    let current_profile = proxy.active_profile().unwrap();
-    return match current_profile.as_str() {
-        "Quiet" => PowerProfile::Quiet,
-        "Balanced" => PowerProfile::Balanced,
-        "Performance" => PowerProfile::Performance,
-        // fall back to balanced
-        _ => PowerProfile::Balanced,
-    }
 }
 
 async fn getprofile() -> PowerProfile {
@@ -62,7 +33,7 @@ async fn getprofile() -> PowerProfile {
 
 
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
-use relm4::{gtk, RelmApp, RelmWidgetExt, SimpleComponent, AsyncComponentSender};
+use relm4::{gtk, RelmApp, RelmWidgetExt, AsyncComponentSender};
 use relm4::component::{AsyncComponent, AsyncComponentParts};
 use relm4::gtk::traits::WidgetExt;
 use relm4::gtk::prelude::{ToggleButtonExt};
@@ -116,7 +87,7 @@ impl AsyncComponent for PowerModel {
 
                     gtk::Label {
                         #[watch]
-                        set_label: &format!("Platform Profile"),
+                        set_label: &format!("Platform Profile: "),
                         set_margin_all: 5,
                     }
                 },
@@ -186,7 +157,7 @@ impl AsyncComponent for PowerModel {
             let conn = zbus::Connection::system().await.unwrap();
             let proxy = ProfileProxy::new(&conn).await.unwrap();
             let mut profile_changed = proxy.receive_notify_profile().await.unwrap();
-            println!("Listening for notify_profile signals...");
+            //println!("Listening for notify_profile signals...");
 
             let mut profile_changed = profile_changed;
             while let Some(signal) = profile_changed.next().await {
@@ -219,10 +190,8 @@ impl AsyncComponent for PowerModel {
                     // fall back to doing nothing
                     _ => { }
                 }
-                println!("{:?}", profile.as_str());
             }
         }
-        //self.profile = getprofile_blocking();
     }
 }
 
