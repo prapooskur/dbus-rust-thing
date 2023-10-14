@@ -62,7 +62,7 @@ trait Aura {
     fn set_brightness(&self, brightness: &str) -> zbus::Result<()>;
 
     /// SetLedMode method
-    fn set_led_mode(&self, effect: &(&str, &str, (u8, u8, u8))) -> zbus::Result<()>;
+    fn set_led_mode(&self, effect: &(&str, &str, (u8, u8, u8), (u8, u8, u8), &str, &str)) -> zbus::Result<()>;
 
     /// SetLedPower method
     /*
