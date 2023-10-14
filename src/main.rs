@@ -17,6 +17,20 @@ fn setprofile_blocking(profile: String) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+async fn setprofile(profile: String) -> Result<(), Box<dyn Error>> {
+    let connection = zbus::Connection::system().await.unwrap();
+
+    let proxy = ProfileProxy::new(&connection).await.unwrap();
+    let reply = proxy.set_active_profile(&profile).await;
+
+    match reply {
+        Ok(()) => println!("Succeeded! {:?}", reply.unwrap()),
+        Err(err) => eprintln!("Error calling next_profile: {:?}", err),
+    }
+
+    Ok(())
+}
+
 fn getprofile_blocking() -> PowerProfile {
     let connection = zbus::blocking::Connection::system().unwrap();
 
@@ -31,11 +45,29 @@ fn getprofile_blocking() -> PowerProfile {
     }
 }
 
+async fn getprofile() -> PowerProfile {
+    let connection = zbus::Connection::system().await.unwrap();
+
+    let proxy = ProfileProxy::new(&connection).await.unwrap();
+    let current_profile = proxy.active_profile().await.unwrap();
+    return match current_profile.as_str() {
+        "Quiet" => PowerProfile::Quiet,
+        "Balanced" => PowerProfile::Balanced,
+        "Performance" => PowerProfile::Performance,
+        // fall back to balanced
+        _ => PowerProfile::Balanced,
+    }
+}
+
+
 
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
-use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
+use relm4::{gtk, RelmApp, RelmWidgetExt, SimpleComponent, AsyncComponentSender};
+use relm4::component::{AsyncComponent, AsyncComponentParts};
 use relm4::gtk::traits::WidgetExt;
 use relm4::gtk::prelude::{ToggleButtonExt};
+use zbus::export::futures_util::StreamExt;
+use crate::dbus_proxy::profile::ProfileProxy;
 
 #[derive(Debug)]
 enum PowerProfile {
@@ -56,12 +88,14 @@ enum PowerMsg {
     NotifyProfile(String),
 }
 
-#[relm4::component]
-impl SimpleComponent for PowerModel {
+#[relm4::component(async)]
+impl AsyncComponent for PowerModel {
     type Init = PowerProfile;
 
     type Input = PowerMsg;
     type Output = ();
+    
+    type CommandOutput = ();
 
     view! {
         gtk::Window {
@@ -102,9 +136,7 @@ impl SimpleComponent for PowerModel {
                         },
                     },
 
-
-
-                    gtk::ToggleButton {
+                    append: balanced_button = &gtk::ToggleButton {
                         set_label: "Balanced",
                         set_group: Some(&power_button),
                         set_active: matches!(model.profile, PowerProfile::Balanced),
@@ -113,7 +145,7 @@ impl SimpleComponent for PowerModel {
                         },
                     },
 
-                    gtk::ToggleButton {
+                    append: performance_button = &gtk::ToggleButton {
                         set_label: "Performance",
                         set_group: Some(&power_button),
                         set_active: matches!(model.profile, PowerProfile::Performance),
@@ -134,29 +166,47 @@ impl SimpleComponent for PowerModel {
     }
 
     // Initialize the UI.
-    fn init(
+    async fn init(
         profile: Self::Init,
-        root: &Self::Root,
-        sender: ComponentSender<Self>,
-    ) -> ComponentParts<Self> {
+        root: Self::Root,
+        sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         let model = PowerModel { profile };
 
         // Insert the macro code generation here
         let widgets = view_output!();
 
-        ComponentParts { model, widgets }
+
+
+        tokio::spawn(async move {
+            // update profile when another app changes it
+            let conn = zbus::Connection::system().await.unwrap();
+            let proxy = ProfileProxy::new(&conn).await.unwrap();
+            let mut profile_changed = proxy.receive_notify_profile().await.unwrap();
+            println!("Listening for notify_profile signals...");
+
+            let mut profile_changed = profile_changed;
+            while let Some(signal) = profile_changed.next().await {
+                let change = signal.args().unwrap().profile.to_string();
+                //println!("{:?}", change);
+                sender.input(PowerMsg::NotifyProfile(change));
+            }
+        });
+
+
+        AsyncComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+    async fn update(&mut self, msg: Self::Input, _sender: AsyncComponentSender<Self>, _root: &Self::Root) {
         match msg {
             PowerMsg::SetQuiet => {
-                setprofile_blocking("Quiet".to_string()).unwrap();
+                setprofile("Quiet".to_string()).await.unwrap();
             }
             PowerMsg::SetBalanced => {
-                setprofile_blocking("Balanced".to_string()).unwrap();
+                setprofile("Balanced".to_string()).await.unwrap();
             }
             PowerMsg::SetPerformance => {
-                setprofile_blocking("Performance".to_string()).unwrap();
+                setprofile("Performance".to_string()).await.unwrap();
             }
             PowerMsg::NotifyProfile(profile) => {
                 match profile.as_str() {
@@ -164,17 +214,20 @@ impl SimpleComponent for PowerModel {
                     "Balanced" => self.profile = PowerProfile::Balanced,
                     "Performance" => self.profile = PowerProfile::Performance,
                     // fall back to doing nothing
-                    _ => {}
+                    _ => { }
                 }
+                println!("{:?}", profile.as_str());
             }
         }
         //self.profile = getprofile_blocking();
     }
 }
 
-fn main() {
-    let app = RelmApp::new("relm4.test.simple");
-    let init_profile = getprofile_blocking();
+#[tokio::main]
+async fn main() {
+    let app = RelmApp::new("com.pras.albatross");
+    let init_profile = getprofile().await;
     println!("{:?}",init_profile);
-    app.run::<PowerModel>(init_profile);
+
+    app.run_async::<PowerModel>(init_profile);
 }

@@ -14,3 +14,4 @@ relm4-components = "0.6.2"
 relm4-icons = { version = "0.6.0", features = ["plus"] }
 zbus = "3.14.1"
 async-std = { version = "1.12.0", features = ["attributes"] }
+tokio = { version = "1.13.0", features = ["full"] }
