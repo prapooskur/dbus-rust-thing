@@ -52,7 +52,8 @@ struct PowerModel {
 enum PowerMsg {
     SetQuiet,
     SetBalanced,
-    SetPerformance
+    SetPerformance,
+    NotifyProfile(String),
 }
 
 #[relm4::component]
@@ -156,6 +157,15 @@ impl SimpleComponent for PowerModel {
             }
             PowerMsg::SetPerformance => {
                 setprofile_blocking("Performance".to_string()).unwrap();
+            }
+            PowerMsg::NotifyProfile(profile) => {
+                match profile.as_str() {
+                    "Quiet" => self.profile = PowerProfile::Quiet,
+                    "Balanced" => self.profile = PowerProfile::Balanced,
+                    "Performance" => self.profile = PowerProfile::Performance,
+                    // fall back to doing nothing
+                    _ => {}
+                }
             }
         }
         //self.profile = getprofile_blocking();
