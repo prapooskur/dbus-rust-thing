@@ -76,7 +76,7 @@ trait Aura {
 
     /// NotifyLed signal
     #[dbus_proxy(signal)]
-    fn notify_led(&self, data: (&str, &str, (u8, u8, u8))) -> zbus::Result<()>;
+    fn notify_led(&self, data: (&str, &str, (u8, u8, u8),  (u8, u8, u8), &str, &str)) -> zbus::Result<()>;
 
     /// NotifyPowerStates signal
     /*
