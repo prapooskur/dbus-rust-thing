@@ -26,7 +26,7 @@ interface = "org.asuslinux.Daemon",
 default_service = "org.asuslinux.Daemon",
 default_path = "/org/asuslinux/Aura"
 )]
-trait Daemon {
+trait Aura {
     /// DeviceType method
     fn device_type(&self) -> zbus::Result<String>;
 
@@ -39,7 +39,7 @@ trait Daemon {
     /// LedModes method
     fn led_modes(
         &self,
-    ) -> zbus::Result<std::collections::HashMap<String, (String, String, (u8, u8, u8))>>;
+    ) -> zbus::Result<std::collections::HashMap<String, (String, String, (u8, u8, u8), (u8, u8, u8), String, String)>>;
 
     /// LedPower method
     fn led_power(
