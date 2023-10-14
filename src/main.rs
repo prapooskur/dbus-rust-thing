@@ -116,7 +116,7 @@ impl AsyncComponent for PowerModel {
 
                     gtk::Label {
                         #[watch]
-                        set_label: &format!("Platform Profile:"),
+                        set_label: &format!("Platform Profile"),
                         set_margin_all: 5,
                     }
                 },
@@ -130,6 +130,7 @@ impl AsyncComponent for PowerModel {
                     append: power_button = &gtk::ToggleButton {
                         set_label: "Quiet",
                         //set_group: Some(&power_button),
+                        #[watch]
                         set_active: matches!(model.profile, PowerProfile::Quiet),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetQuiet);
@@ -139,6 +140,7 @@ impl AsyncComponent for PowerModel {
                     append: balanced_button = &gtk::ToggleButton {
                         set_label: "Balanced",
                         set_group: Some(&power_button),
+                        #[watch]
                         set_active: matches!(model.profile, PowerProfile::Balanced),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetBalanced);
@@ -148,6 +150,7 @@ impl AsyncComponent for PowerModel {
                     append: performance_button = &gtk::ToggleButton {
                         set_label: "Performance",
                         set_group: Some(&power_button),
+                        #[watch]
                         set_active: matches!(model.profile, PowerProfile::Performance),
                         connect_clicked[sender] => move |_| {
                             sender.input(PowerMsg::SetPerformance);
