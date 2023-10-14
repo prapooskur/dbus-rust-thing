@@ -1,42 +1,12 @@
 mod dbus_proxy;
-use dbus_proxy::profile::AsusDaemonProxyBlocking;
+use dbus_proxy::profile::ProfileProxyBlocking;
 
 use std::error::Error;
-
-async fn tesr() -> Result<(), Box<dyn Error>> {
-    let connection = zbus::blocking::Connection::system().unwrap();
-
-    let proxy = AsusDaemonProxyBlocking::new(&connection).unwrap();
-    let reply_switch = proxy.next_profile();
-    let reply_new = proxy.active_profile();
-
-    match reply_switch {
-        Ok(()) => println!("{reply_new:?}"),
-        Err(err) => eprintln!("Error calling next_profile: {:?}", err),
-    }
-
-    Ok(())
-}
-
-fn nextprofile_blocking() -> Result<(), Box<dyn Error>> {
-    let connection = zbus::blocking::Connection::system().unwrap();
-
-    let proxy = AsusDaemonProxyBlocking::new(&connection).unwrap();
-    let reply_switch = proxy.next_profile();
-    let reply_new = proxy.active_profile();
-
-    match reply_switch {
-        Ok(()) => println!("{reply_new:?}"),
-        Err(err) => eprintln!("Error calling next_profile: {:?}", err),
-    }
-
-    Ok(())
-}
 
 fn setprofile_blocking(profile: String) -> Result<(), Box<dyn Error>> {
     let connection = zbus::blocking::Connection::system().unwrap();
 
-    let proxy = AsusDaemonProxyBlocking::new(&connection).unwrap();
+    let proxy = ProfileProxyBlocking::new(&connection).unwrap();
     let reply = proxy.set_active_profile(&profile);
 
     match reply {
@@ -50,7 +20,7 @@ fn setprofile_blocking(profile: String) -> Result<(), Box<dyn Error>> {
 fn getprofile_blocking() -> PowerProfile {
     let connection = zbus::blocking::Connection::system().unwrap();
 
-    let proxy = AsusDaemonProxyBlocking::new(&connection).unwrap();
+    let proxy = ProfileProxyBlocking::new(&connection).unwrap();
     let current_profile = proxy.active_profile().unwrap();
     return match current_profile.as_str() {
         "Quiet" => PowerProfile::Quiet,
@@ -65,7 +35,7 @@ fn getprofile_blocking() -> PowerProfile {
 use gtk::prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt};
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
 use relm4::gtk::traits::WidgetExt;
-use relm4::gtk::prelude::{ComboBoxExtManual, ToggleButtonExt};
+use relm4::gtk::prelude::{ToggleButtonExt};
 
 #[derive(Debug)]
 enum PowerProfile {
@@ -155,7 +125,7 @@ impl SimpleComponent for PowerModel {
 
                 },
 
-        
+
 
             }
 
@@ -188,7 +158,7 @@ impl SimpleComponent for PowerModel {
                 setprofile_blocking("Performance".to_string()).unwrap();
             }
         }
-        self.profile = getprofile_blocking();
+        //self.profile = getprofile_blocking();
     }
 }
 

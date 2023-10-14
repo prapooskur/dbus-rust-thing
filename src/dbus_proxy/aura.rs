@@ -65,22 +65,28 @@ trait Aura {
     fn set_led_mode(&self, effect: &(&str, &str, (u8, u8, u8))) -> zbus::Result<()>;
 
     /// SetLedPower method
+    /*
     fn set_led_power(
         &self,
         options: &(&[&str], &[&str], (&str, bool, bool, bool, bool)),
         enabled: bool,
     ) -> zbus::Result<()>;
 
+     */
+
     /// NotifyLed signal
     #[dbus_proxy(signal)]
     fn notify_led(&self, data: (&str, &str, (u8, u8, u8))) -> zbus::Result<()>;
 
     /// NotifyPowerStates signal
+    /*
     #[dbus_proxy(signal)]
     fn notify_power_states(
         &self,
         data: (&[&str], &[&str], (&str, bool, bool, bool, bool)),
     ) -> zbus::Result<()>;
+
+     */
 
     /// LedBrightness property
     #[dbus_proxy(property)]

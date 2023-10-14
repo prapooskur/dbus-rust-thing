@@ -26,7 +26,7 @@ interface = "org.asuslinux.Daemon",
 default_service = "org.asuslinux.Daemon",
 default_path = "/org/asuslinux/Profile"
 )]
-trait AsusDaemon {
+trait Profile {
     /// ActiveProfile method
     fn active_profile(&self) -> zbus::Result<String>;
 
