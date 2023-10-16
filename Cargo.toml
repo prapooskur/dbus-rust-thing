@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # Core library
-relm4 = "0.6.2"
+relm4 = { version = "0.6.2", features = ["gnome_44"] }
 # Optional: reusable components
 relm4-components = "0.6.2"
 # Optional: icons
