@@ -9,7 +9,7 @@ use relm4::gtk::prelude::{ToggleButtonExt};
 use zbus::export::futures_util::StreamExt;
 use crate::dbus_proxy::profile_proxy::ProfileProxy;
 
-pub async fn setprofile(profile: String) -> Result<(), Box<dyn Error>> {
+pub async fn set_profile(profile: String) -> Result<(), Box<dyn Error>> {
     let connection = zbus::Connection::system().await.unwrap();
 
     let proxy = ProfileProxy::new(&connection).await.unwrap();
@@ -23,7 +23,7 @@ pub async fn setprofile(profile: String) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn getprofile() -> PowerProfile {
+pub async fn get_profile() -> PowerProfile {
     let connection = zbus::Connection::system().await.unwrap();
 
     let proxy = ProfileProxy::new(&connection).await.unwrap();
@@ -153,7 +153,7 @@ impl AsyncComponent for PowerModel {
             // update profile when another app changes it
             let conn = zbus::Connection::system().await.unwrap();
             let proxy = ProfileProxy::new(&conn).await.unwrap();
-            let mut profile_changed = proxy.receive_notify_profile().await.unwrap();
+            let profile_changed = proxy.receive_notify_profile().await.unwrap();
             //println!("Listening for notify_profile signals...");
 
             let mut profile_changed = profile_changed;
@@ -171,13 +171,13 @@ impl AsyncComponent for PowerModel {
     async fn update(&mut self, msg: Self::Input, _sender: AsyncComponentSender<Self>, _root: &Self::Root) {
         match msg {
             PowerMsg::SetQuiet => {
-                setprofile("Quiet".to_string()).await.unwrap();
+                set_profile("Quiet".to_string()).await.unwrap();
             }
             PowerMsg::SetBalanced => {
-                setprofile("Balanced".to_string()).await.unwrap();
+                set_profile("Balanced".to_string()).await.unwrap();
             }
             PowerMsg::SetPerformance => {
-                setprofile("Performance".to_string()).await.unwrap();
+                set_profile("Performance".to_string()).await.unwrap();
             }
             PowerMsg::NotifyProfile(profile) => {
                 match profile.as_str() {
